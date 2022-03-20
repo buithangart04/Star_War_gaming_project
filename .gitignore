@@ -1,2 +1,2 @@
-./server/node_modules
-./frontend/img
+*node_modules/*
+*img/*
