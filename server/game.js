@@ -85,7 +85,7 @@ function gameLoop(state, number) {
     );
   }
   if (thisPlayer.point > thisPlayer.rank.exp) {
-    if (thisPlayer.rank.level < 3) {
+    if (thisPlayer.rank.level < 2) {
       thisPlayer.rank = RANK[thisPlayer.rank.level + 1];
     } else {
       return number;

@@ -3,14 +3,23 @@ const socket = io("http://localhost:3000", { transports: ["websocket"] });
 let canvas, ctx;
 let oldPlayerState = {};
 let playerNumber;
-let gameActive = false;
+let gameActive;
 let background;
+let rect;
 let main_idx = 1;
 let listCharacterImage;
 
+$(document).ready(function() {
+  $('#myModal').modal('show');
+});
+
 socket.on("init", handleInit);
 socket.on("gameState", handleGameState);
-function newGame() {
+socket.on("gameover", handleGameOver);
+/*--------------------------------handle event-----------------------------*/
+
+function joinGame() {
+  $('#myModal').modal('hide');
   init();
   socket.emit("newGame");
 }
@@ -20,13 +29,23 @@ function init() {
   ctx = canvas.getContext("2d");
   canvas.width = SCREEN_WIDTH;
   canvas.height = SCREEN_HEIGHT;
-  const rect = canvas.getBoundingClientRect();
+  rect = canvas.getBoundingClientRect();
   background = initBG();
   paintBackGround();
-  canvas.addEventListener("mousemove", (evt) => {
-    socket.emit("mousemove", evt.clientX - rect.left, evt.clientY - rect.top);
-  });
+  // paintRestrictBg();
+  canvas.addEventListener("mousemove", handleMouseMove);
+  canvas.addEventListener("click", handleClick);
   gameActive = true;
+}
+
+function handleMouseMove(evt){
+
+  if (!gameActive) return;
+  socket.emit("mousemove", evt.clientX - rect.left, evt.clientY - rect.top);
+}
+function handleClick(evt){
+  if (!gameActive) return;
+  socket.emit("combat");
 }
 
 function handleInit(_playerNumber) {
@@ -38,15 +57,149 @@ function handleGameState(state) {
     return;
   }
   state = JSON.parse(state);
+  console.log(playerNumber);
   requestAnimationFrame(() => paintgame(state));
 }
+function handleGameOver(_gameover_state) {
+  if (!gameActive) return;
+  const gameover_state = JSON.parse(_gameover_state);
+  if (playerNumber != gameover_state.number) return;
+  if (!gameover_state.isWinner) {
+    alert("You losed!");
+  } else {
+    alert("You win!");
+  }
+  gameActive=false;
+}
+/*--------------------------paint--------------------------------------- */
 function paintgame(state) {
-  let currPlayer = state.players[playerNumber];
-  updateBackground(currPlayer);
-  oldPlayerState = { ...currPlayer };
-  state.players.forEach((player) => paintPlayer(player, currPlayer));
+  let thisPlayer = getCurrentPlayer(state,playerNumber);
+  updateBackground(thisPlayer);
+  //paint restrict bg
+  paintRestrictBg(thisPlayer);
+  //paint food
+  paintFood(state.food, thisPlayer);
+  oldPlayerState = { ...thisPlayer };
+  state.players.forEach((player) => paintPlayer(player, thisPlayer));
 }
 
+async function paintPlayer(player, thisPlayer) {
+  const prefix = getPrefixByLevel(player.rank.level);
+  await drawImageRotate(ctx, {
+    x: player.x - thisPlayer.x + SCREEN_WIDTH / 2,
+    y: player.y - thisPlayer.y + SCREEN_HEIGHT / 2,
+    width: player.rank.width,
+    height: player.rank.height,
+    weapon: {
+      ...player.weapon,
+      x_0: player.weapon.x_0 - thisPlayer.x + SCREEN_WIDTH / 2,
+      y_0: player.weapon.y_0 - thisPlayer.y + SCREEN_HEIGHT / 2,
+      x_1: player.weapon.x_1 - thisPlayer.x + SCREEN_WIDTH / 2,
+      y_1: player.weapon.y_1 - thisPlayer.y + SCREEN_HEIGHT / 2,
+      width: player.rank.weapon_w,
+    },
+    angle: player.angle,
+    prefix,
+  });
+}
+async function paintFood(food, thisPlayer) {
+  food.forEach(async (e) => {
+    let img = await loadImageByAngle(pre_food, e.type);
+    ctx.drawImage(
+      img,
+      e.x - thisPlayer.x + SCREEN_WIDTH / 2,
+      e.y - thisPlayer.y + SCREEN_HEIGHT / 2,
+      FOOD_SIZE,
+      FOOD_SIZE
+    );
+  });
+}
+/*------------------------------back ground handle---------------------------------------*/
+function initBG() {
+  return [
+    {
+      index: 0,
+      img: "background_img1",
+      x: -SCREEN_WIDTH / 2,
+      y: SCREEN_HEIGHT / 2,
+    },
+    {
+      index: 1,
+      img: "background_img2",
+      x: SCREEN_WIDTH / 2,
+      y: SCREEN_HEIGHT / 2,
+    },
+    {
+      index: 2,
+      img: "background_img3",
+      x: -SCREEN_WIDTH / 2,
+      y: -SCREEN_HEIGHT / 2,
+    },
+    {
+      index: 3,
+      img: "background_img4",
+      x: SCREEN_WIDTH / 2,
+      y: -SCREEN_HEIGHT / 2,
+    },
+  ];
+}
+
+function paintBackGround() {
+  background.forEach((e) => {
+    drawImage(ctx, e.img, {
+      x: e.x,
+      y: e.y,
+      width: canvas.width,
+      height: canvas.height,
+    });
+  });
+}
+function paintRestrictBg(thisPlayer) {
+  // draw in the right of screen
+  if (
+    thisPlayer.x >
+    ROOM_WIDTH - SCREEN_WIDTH / 2 + thisPlayer.rank.width / 2
+  ) {
+    let x =
+      SCREEN_WIDTH -
+      (SCREEN_WIDTH / 2 -
+        ROOM_WIDTH +
+        thisPlayer.x -
+        thisPlayer.rank.width / 2);
+    //drawImage(ctx, 'restrict_bg_1',{x,y:0,width:canvas.width,height:canvas.height});
+    ctx.fillRect(x, 0, canvas.width, canvas.height, "#787675");
+  } else if (thisPlayer.x < SCREEN_WIDTH / 2 - thisPlayer.rank.width / 2) {
+    let x =
+      -SCREEN_WIDTH -
+      thisPlayer.x +
+      SCREEN_WIDTH / 2 -
+      thisPlayer.rank.width / 2;
+    // drawImage(ctx, 'restrict_bg_1',{x,y:0, width:canvas.width, height:canvas.height});
+    ctx.fillRect(x, 0, canvas.width, canvas.height, "#787675");
+  }
+  // draw in bottom of screen
+  if (
+    thisPlayer.y >
+    ROOM_HEIGHT - SCREEN_HEIGHT / 2 + thisPlayer.rank.height / 2
+  ) {
+    let y =
+      SCREEN_HEIGHT -
+      (SCREEN_HEIGHT / 2 -
+        ROOM_HEIGHT +
+        thisPlayer.y -
+        thisPlayer.rank.height / 2);
+    //drawImage(ctx, 'restrict_bg_2',{x: 0,y,width:canvas.width,height:canvas.height});
+    ctx.fillRect(0, y, canvas.width, canvas.height, "#787675");
+  } else if (thisPlayer.y < SCREEN_HEIGHT / 2 - thisPlayer.rank.height / 2) {
+    let y =
+      -SCREEN_HEIGHT -
+      thisPlayer.y +
+      SCREEN_HEIGHT / 2 -
+      thisPlayer.rank.height / 2;
+    // drawImage(ctx, 'restrict_bg_2',{x:0,y, width:canvas.width, height:canvas.height});
+    ctx.fillRect(0, y, canvas.width, canvas.height, "#787675");
+  }
+}
 function updateBackground(currPlayer) {
   if (!oldPlayerState.x) {
     return;
@@ -144,62 +297,3 @@ function updateOtherBG(main_bg) {
   paintBackGround();
 }
 
-async function paintPlayer(player, currPlayer) {
-  console.log(currPlayer.x, currPlayer.y);
-  const prefix = getPrefixByLevel(player.rank.level);
-  await drawImageRotate(ctx, {
-    x: player.x - currPlayer.x + SCREEN_WIDTH / 2,
-    y: player.y - currPlayer.y + SCREEN_HEIGHT / 2,
-    width: player.rank.width,
-    height: player.rank.height,
-    weapon: {
-      ... getWeaponPos(player,currPlayer),
-      width: player.rank.weapon_w,
-      height: player.rank.weapon_h,
-    },
-    angle: player.angle,
-    prefix,
-  });
-}
-
-function initBG() {
-  return [
-    {
-      index: 0,
-      img: "background_img1",
-      x: -SCREEN_WIDTH / 2,
-      y: SCREEN_HEIGHT / 2,
-    },
-    {
-      index: 1,
-      img: "background_img2",
-      x: SCREEN_WIDTH / 2,
-      y: SCREEN_HEIGHT / 2,
-    },
-    {
-      index: 2,
-      img: "background_img3",
-      x: -SCREEN_WIDTH / 2,
-      y: -SCREEN_HEIGHT / 2,
-    },
-    {
-      index: 3,
-      img: "background_img4",
-      x: SCREEN_WIDTH / 2,
-      y: -SCREEN_HEIGHT / 2,
-    },
-  ];
-}
-function paintBackGround() {
-  background.forEach((e) => {
-    drawImage(ctx, e.img, {
-      x: e.x,
-      y: e.y,
-      width: canvas.width,
-      height: canvas.height,
-    });
-  });
-}
-
-// must call when click play
-newGame();

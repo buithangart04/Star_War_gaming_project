@@ -47,7 +47,7 @@ io.on("connection", (client) => {
           "gameover",
           JSON.stringify({ number: winner, isWinner: true })
         );
-        clearInterval(intervalId);
+        //clearInterval(intervalId);
       }
     }, 1000 / FRAME_RATE);
   }
