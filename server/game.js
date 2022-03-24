@@ -117,11 +117,18 @@ function checkCharacterDeath(state, io) {
       let victim = state.players[j];
       // check vị trí chạm của victim vì người nó chỉ chiếm nửa bức ảnh vẽ ra mà tọa độ hiện tại là ở trung tâm
       // và check khi đang vụt thì ms tính
+      /*
+       victim.x - victim.rank.width / 4 >= thisPlayer.weapon.x_0
+        &&
+       victim.x - victim.rank.width / 4 >= thisPlayer.weapon.x_0
+
+      */
       if (
-        thisPlayer.weapon.x_1 >= victim.x - victim.rank.width / 4 &&
-        thisPlayer.weapon.x_1 <= victim.x + victim.rank.width / 4 &&
-        thisPlayer.weapon.y_1 >= victim.y - victim.rank.height / 4 &&
-        thisPlayer.weapon.y_1 <= victim.y + victim.rank.height / 4 &&
+        (checkLineIntersectLine({x1:thisPlayer.weapon.x_0 , y1: thisPlayer.weapon.y_0 , x2:thisPlayer.weapon.x_1 , y2: thisPlayer.weapon.y_1} , {x1:victim.x-victim.rank.width/4,y1:victim.y-victim.rank.height/4,x2:victim.x+victim.rank.width/4 ,y2: victim.y-victim.rank.height/4 })||
+        checkLineIntersectLine({x1:thisPlayer.weapon.x_0 , y1: thisPlayer.weapon.y_0 , x2:thisPlayer.weapon.x_1 , y2: thisPlayer.weapon.y_1} , {x1:victim.x-victim.rank.width/4,y1:victim.y-victim.rank.height/4,x2:victim.x-victim.rank.width/4 ,y2: victim.y+victim.rank.height/4 })||
+        checkLineIntersectLine({x1:thisPlayer.weapon.x_0 , y1: thisPlayer.weapon.y_0 , x2:thisPlayer.weapon.x_1 , y2: thisPlayer.weapon.y_1} , {x1:victim.x+victim.rank.width/4,y1:victim.y-victim.rank.height/4,x2:victim.x+victim.rank.width/4 ,y2: victim.y+victim.rank.height/4 }) ||
+        checkLineIntersectLine({x1:thisPlayer.weapon.x_0 , y1: thisPlayer.weapon.y_0 , x2:thisPlayer.weapon.x_1 , y2: thisPlayer.weapon.y_1} , {x1:victim.x-victim.rank.width/4,y1:victim.y+victim.rank.height/4,x2:victim.x+victim.rank.width/4 ,y2: victim.y+victim.rank.height/4 })
+        )&&
         thisPlayer.recover_time > 380
       ) {
         victims.push(victim.id);
@@ -134,6 +141,14 @@ function checkCharacterDeath(state, io) {
     }
   }
   state.players = state.players.filter( (e) => !checkValueInArray(victims,e.id) );
+}
+function checkLineIntersectLine(line1,line2){
+  let x = (line2.y1- ((line2.y1-line2.y2)/(line2.x1-line2.x2)*line2.x1) - (line1.y1- ((line1.y1-line1.y2)/(line1.x1-line1.x2)*line1.x1)))/ ((line1.y1-line1.y2)/(line1.x1-line1.x2)-(line2.y1-line2.y2)/(line2.x1-line2.x2));
+  // don't need to calculate y_intersect ( below is calculate y_intersect)
+  //let y= (line1.y1-line1.y2)/(line1.x1-line1.x2)*(x-line1.x1)+line1.y1;
+  let inLine1 = ((x>=line1.x1&&x<=line1.x2) || (x>=line1.x2&&x<=line1.x1));
+  let inLine2 = ((x>=line2.x1&&x<=line2.x2) || (x>=line2.x2&&x<=line2.x1));
+  return inLine1&&inLine2;
 }
 function getUpdateWeapon(player, char_weapon_angle) {
   let player_angle = (player.angle * 180) / Math.PI;
