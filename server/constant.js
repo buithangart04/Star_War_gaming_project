@@ -8,7 +8,7 @@ const ATTACK_SPEED = Math.PI/9; // cung quay dc trong 1 frame rate danh
 const RANK = [
   {
     level: 0,
-    vel: 6,
+    vel: 5,
     exp: 10,
     width: 150,
     height: 150,
