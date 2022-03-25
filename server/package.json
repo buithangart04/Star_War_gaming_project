@@ -4,7 +4,6 @@
   "description": "thang",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon",
     "test": "jest --watchAll --verbose --runInBand"
   },
   "author": "art",
