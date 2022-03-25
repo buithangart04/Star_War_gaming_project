@@ -1,4 +1,4 @@
-const socket = io("https://mysterious-brook-80094.herokuapp.com/");
+const socket = io("https://mysterious-brook-80094.herokuapp.com/", { transports: ["websocket"] });
 
 let canvas, ctx;
 let oldPlayerState = {};
