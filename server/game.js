@@ -6,30 +6,31 @@ const {
   SCREEN_HEIGHT,
   CHARACTER_WEAPON_ANGLE,
   ATTACK_SPEED,
+  FRAME_RATE,
 } = require("./constant");
 const { getCurrentPlayer ,checkValueInArray } = require("./utils");
-
+let botId=100000;
 function initGame() {
   const state = createGameState();
-  //randomFood(state);
+  //create bot
+  createListBot(state);
   return state;
 }
 function createGameState() {
-  const initPlayer = getRandomPos();
   return {
-    players: [createNewPlayer()],
+    players: [createNewPlayer(true)],
     food: getRandomFood(50),
   };
 }
 
-function createNewPlayer() {
+function createNewPlayer(isPlayer) {
   const initPlayer = getRandomPos();
   return {
     id: 0,
-    // x: initPlayer.x, // vi tri chinh giua cua player
-    // y: initPlayer.y,
-    x: 0,
-    y: 0,
+    // vi tri chinh giua cua player
+    x: initPlayer.x, 
+    y: initPlayer.y,
+    isPlayer,
     rank: RANK[0],
     point: 0,
     angle: 0,
@@ -39,8 +40,9 @@ function createNewPlayer() {
       x_1: initPlayer.x + RANK[0].width / 2 + RANK[0].weapon_w,
       y_1: initPlayer.y + RANK[0].weapon_h,
       angle: CHARACTER_WEAPON_ANGLE,
-      recover_time: 0,
     },
+    recover_time: 0,
+    bot_change_direction_time : 800
   };
 }
 function getRandomFood(min) {
@@ -59,14 +61,10 @@ function getRandomPos() {
     y: Math.random() * ROOM_HEIGHT,
   };
 }
-function gameLoop(state, number) {
-  if (!state) return;
-  let thisPlayer = getCurrentPlayer(state, number);
-  if (!thisPlayer) return;
-  // handle attack
-
+function getUpdatePlayer(thisPlayer){
   if (thisPlayer.recover_time > 380) {
     let move_angle;
+    // attack direction will be made by the angle of character and it will lock the movement of character
     if (thisPlayer.angle > -Math.PI / 2 && thisPlayer.angle < Math.PI / 2) {
       move_angle = thisPlayer.weapon.angle + ATTACK_SPEED;
     } else move_angle = thisPlayer.weapon.angle - ATTACK_SPEED;
@@ -74,39 +72,63 @@ function gameLoop(state, number) {
       move_angle *= -1;
     }
     thisPlayer.weapon = updateWeaponByAngle(thisPlayer, move_angle);
-  } else {
+  } else { // update character movement
     let pos = getUpdatedVelocity(thisPlayer);
-    thisPlayer.x += pos.x;
-    thisPlayer.y += pos.y;
+    thisPlayer.x += thisPlayer.isPlayer? pos.x : pos.x/1.2;
+    thisPlayer.y +=  thisPlayer.isPlayer? pos.y: pos.y/1.2;
     thisPlayer.angle = pos.angle;
     thisPlayer.weapon = getUpdateWeapon(
       { ...thisPlayer },
       CHARACTER_WEAPON_ANGLE
     );
   }
+  // this happen when character will be upgrade level
   if (thisPlayer.point > thisPlayer.rank.exp) {
     if (thisPlayer.rank.level < 2) {
       thisPlayer.rank = RANK[thisPlayer.rank.level + 1];
-    } else {
-      return number;
+    }else if(!thisPlayer.isPlayer) return false;
+     else{
+      return thisPlayer.id;
     }
   }
-  //eatFood
-  eatFood(state);
+
   if (thisPlayer.recover_time > 0)
     thisPlayer.recover_time -= (ATTACK_SPEED * 180) / Math.PI;
-  return false;
+    return false;
 }
-function updateWeaponByAngle(player, angle) {
-  let r = player.rank.width / 4;
-  return {
-    x_0: player.x + r * Math.cos(player.angle),
-    y_0: player.y + r * Math.sin(player.angle),
-    x_1: player.x + player.rank.weapon_h * Math.cos(angle),
-    y_1: player.y + player.rank.weapon_h * Math.sin(angle),
-    angle,
-  };
+function gameLoop(state, number) {
+  if (!state) return;
+  let thisPlayer = getCurrentPlayer(state, number);
+  if (!thisPlayer) return;
+  // handle attack
+  let returnStatement = getUpdatePlayer(thisPlayer);
+  //update bot 
+  getUpdateBotsDirection(state);
+  checkBotCombat(state);
+  //eatFood
+  eatFood(state);
+  return returnStatement;
 }
+
+function eatFood(state){
+  for(let i=0;i< state.players.length;++i){
+    for(let j=0;j<state.food.length;++j){
+      if(state.players[i].x - state.players[i].rank.width/2 <state.food[j].x
+      && state.players[i].x + state.players[i].rank.width/2 >state.food[j].x
+      &&state.players[i].y - state.players[i].rank.height/2 <state.food[j].y
+      && state.players[i].y + state.players[i].rank.height/2 >state.food[j].y
+      ){
+        state.players[i].point += 0.5;
+        state.food.splice(j, 1);
+        j--;
+      }
+    }
+  }
+  if(state.food.length< 30){
+    state.food= state.food.concat(getRandomFood(50));
+  }
+}
+
 function checkCharacterDeath(state, io) {
   if (!state) return;
   let victims = [];
@@ -117,12 +139,6 @@ function checkCharacterDeath(state, io) {
       let victim = state.players[j];
       // check vị trí chạm của victim vì người nó chỉ chiếm nửa bức ảnh vẽ ra mà tọa độ hiện tại là ở trung tâm
       // và check khi đang vụt thì ms tính
-      /*
-       victim.x - victim.rank.width / 4 >= thisPlayer.weapon.x_0
-        &&
-       victim.x - victim.rank.width / 4 >= thisPlayer.weapon.x_0
-
-      */
       if (
         (checkLineIntersectLine({x1:thisPlayer.weapon.x_0 , y1: thisPlayer.weapon.y_0 , x2:thisPlayer.weapon.x_1 , y2: thisPlayer.weapon.y_1} , {x1:victim.x-victim.rank.width/4,y1:victim.y-victim.rank.height/4,x2:victim.x+victim.rank.width/4 ,y2: victim.y-victim.rank.height/4 })||
         checkLineIntersectLine({x1:thisPlayer.weapon.x_0 , y1: thisPlayer.weapon.y_0 , x2:thisPlayer.weapon.x_1 , y2: thisPlayer.weapon.y_1} , {x1:victim.x-victim.rank.width/4,y1:victim.y-victim.rank.height/4,x2:victim.x-victim.rank.width/4 ,y2: victim.y+victim.rank.height/4 })||
@@ -141,6 +157,8 @@ function checkCharacterDeath(state, io) {
     }
   }
   state.players = state.players.filter( (e) => !checkValueInArray(victims,e.id) );
+  // after kill bot or players
+  createListBot(state);
 }
 function checkLineIntersectLine(line1,line2){
   let x = (line2.y1- ((line2.y1-line2.y2)/(line2.x1-line2.x2)*line2.x1) - (line1.y1- ((line1.y1-line1.y2)/(line1.x1-line1.x2)*line1.x1)))/ ((line1.y1-line1.y2)/(line1.x1-line1.x2)-(line2.y1-line2.y2)/(line2.x1-line2.x2));
@@ -166,7 +184,16 @@ function getUpdateWeapon(player, char_weapon_angle) {
     ...updateWeaponByAngle(player, angle),
   };
 }
-
+function updateWeaponByAngle(player, angle) {
+  let r = player.rank.width / 4;
+  return {
+    x_0: player.x + r * Math.cos(player.angle),
+    y_0: player.y + r * Math.sin(player.angle),
+    x_1: player.x + player.rank.weapon_h * Math.cos(angle),
+    y_1: player.y + player.rank.weapon_h * Math.sin(angle),
+    angle,
+  };
+}
 function getUpdatedVelocity(
   thisPlayer,
   mouseX = undefined,
@@ -203,22 +230,58 @@ function getPointByKillCharacter(lv) {
       return 10;
   }
 }
-function eatFood(state){
-  for(let i=0;i< state.players.length;++i){
-    for(let j=0;j<state.food.length;++j){
-      if(state.players[i].x - state.players[i].rank.width/2 <state.food[j].x
-      && state.players[i].x + state.players[i].rank.width/2 >state.food[j].x
-      &&state.players[i].y - state.players[i].rank.height/2 <state.food[j].y
-      && state.players[i].y + state.players[i].rank.height/2 >state.food[j].y
-      ){
-        state.players[i].point += 0.5;
-        state.food.splice(j, 1);
-        j--;
-      }
+/* -----------------------------------handle with bot ----------------------------------------- */
+function createListBot(state){
+  if(state.players.length > 10) return;
+  for(let i=0;i<(20-state.players.length);++i){
+    let bot = createNewPlayer(false);
+    bot.id= botId++;
+    state.players.push(bot);
+  }
+}
+function removeBot(state){
+  if(state.players.length<40) return true;
+  let isRemove= false;
+  for(let i=0;i<state.players.length;++i){
+    if(!state.players[i].isPlayer){
+      state.players.splice(i,1); 
+      isRemove = true;
+      break;
     }
   }
-  if(state.food.length< 30){
-    state.food= state.food.concat(getRandomFood(50));
+  return isRemove;
+}
+function getUpdateBotsDirection(state){
+  for(let i=0;i<state.players.length;++i){
+    if(!state.players[i].isPlayer) {
+      getUpdatePlayer(state.players[i]);
+      if(state.players[i].bot_change_direction_time>0) {
+        state.players[i].bot_change_direction_time -= 1000/FRAME_RATE;
+        continue;
+      }
+      else{
+        state.players[i].bot_change_direction_time = 800 ;
+        state.players[i].angle= Math.random()<0.5? Math.random()*Math.PI*(-1) : Math.random()*Math.PI;
+      } 
+    }
+    
+  }
+}
+function checkBotCombat(state){
+  for(let i=0;i<state.players.length;++i){
+    if(!state.players[i].isPlayer){
+      let thisBot= state.players[i];
+      for(let j=0;j<state.players.length;++j){
+        if(i==j) continue;
+        let victim = state.players[j];
+        let r = Math.sqrt((thisBot.x-victim.x)**2 + (thisBot.y-victim.y)**2);
+        if(r<(thisBot.rank.width/2+thisBot.rank.weapon_h)*1.2){ // đúng mẹ nó rồi
+          thisBot.angle = victim.angle>0?  victim.angle-Math.PI : victim.angle+Math.PI ;
+          if(thisBot.recover_time <= 0) thisBot.recover_time=500;
+          break;
+        }
+      }
+    }
   }
 }
 
@@ -228,4 +291,5 @@ module.exports = {
   getUpdatedVelocity,
   createNewPlayer,
   checkCharacterDeath,
+  removeBot
 };

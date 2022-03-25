@@ -16,6 +16,8 @@ $(document).ready(function() {
 socket.on("init", handleInit);
 socket.on("gameState", handleGameState);
 socket.on("gameover", handleGameOver);
+socket.on("fullOfRoom", handleFullOfRoom);
+
 /*--------------------------------handle event-----------------------------*/
 
 function joinGame() {
@@ -36,6 +38,9 @@ function init() {
   canvas.addEventListener("mousemove", handleMouseMove);
   canvas.addEventListener("click", handleClick);
   gameActive = true;
+}
+function handleFullOfRoom(){
+ alert('This room is full! Please try later!');
 }
 
 function handleMouseMove(evt){

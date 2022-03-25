@@ -27,7 +27,7 @@ const RANK = [
   {
     level: 2,
     vel: 3,
-    exp: 40,
+    exp: 70,
     width: 400,
     height: 400,
     weapon_w: 80,

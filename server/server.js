@@ -5,6 +5,7 @@ const {
   getUpdatedVelocity,
   createNewPlayer,
   checkCharacterDeath,
+  removeBot
 } = require("./game");
 const { getCurrentPlayer } = require("./utils");
 const { FRAME_RATE } = require("./constant");
@@ -27,14 +28,15 @@ io.on("connection", (client) => {
     if (!state) {
       state = initGame();
     } else {
-      state.players.push(createNewPlayer());
+      let isRemove = removeBot(state);
+      if(!isRemove) {client.emit('fullOfRoom'); return;}
+      state.players.push(createNewPlayer(true));
     }
     client.number = count;
     count++;
     let length = state.players.length;
     state.players[length-1].id = client.number;
     client.emit("init", client.number);
-
   }
   function startInterval() {
     const intervalId = setInterval(() => {
@@ -56,7 +58,7 @@ io.on("connection", (client) => {
     io.emit("gameState", JSON.stringify(gameState));
   }
   function handleCombat() {
-    // đánh xuống góc 120
+    // this will attack an angle 120 degrees
     let thisPlayer = getCurrentPlayer(state, this.number);
     if (thisPlayer.recover_time > 0) return;
     thisPlayer.recover_time = 500;
