@@ -67,4 +67,4 @@ io.on("connection", (client) => {
   startInterval();
 });
 
-io.listen(process.env.PORT||3000)
+io.listen(process.env.PORT || 3000)
