@@ -9,8 +9,8 @@ let rect;
 let main_idx = 1;
 let listCharacterImage;
 
-$(document).ready(function() {
-  $('#myModal').modal('show');
+$(document).ready(function () {
+  $("#myModal").modal("show");
 });
 
 socket.on("init", handleInit);
@@ -21,9 +21,9 @@ socket.on("fullOfRoom", handleFullOfRoom);
 /*--------------------------------handle event-----------------------------*/
 
 function joinGame() {
-  $('#myModal').modal('hide');
+  $("#myModal").modal("hide");
   init();
-  socket.emit("newGame");
+  socket.emit("newGame", document.getElementById("nickname").value);
 }
 
 function init() {
@@ -39,16 +39,15 @@ function init() {
   canvas.addEventListener("click", handleClick);
   gameActive = true;
 }
-function handleFullOfRoom(){
- alert('This room is full! Please try later!');
+function handleFullOfRoom() {
+  alert("This room is full! Please try later!");
 }
 
-function handleMouseMove(evt){
-
+function handleMouseMove(evt) {
   if (!gameActive) return;
   socket.emit("mousemove", evt.clientX - rect.left, evt.clientY - rect.top);
 }
-function handleClick(evt){
+function handleClick(evt) {
   if (!gameActive) return;
   socket.emit("combat");
 }
@@ -74,18 +73,39 @@ function handleGameOver(_gameover_state) {
   } else {
     alert("You win!");
   }
-  gameActive=false;
+  gameActive = false;
 }
 /*--------------------------paint--------------------------------------- */
 function paintgame(state) {
-  let thisPlayer = getCurrentPlayer(state,playerNumber);
+  let thisPlayer = getCurrentPlayer(state, playerNumber);
   updateBackground(thisPlayer);
+  displayTopPlayers(state);
   //paint restrict bg
   paintRestrictBg(thisPlayer);
   //paint food
   paintFood(state.food, thisPlayer);
   oldPlayerState = { ...thisPlayer };
   state.players.forEach((player) => paintPlayer(player, thisPlayer));
+ 
+}
+
+function displayTopPlayers(state) {
+  // red , blue , purple
+  let colors = ['red','blue','#7b5396' ,'#e0b61d','green'];
+  ctx.font = "40px Arial Bold";
+  ctx.textAlign = "center";
+  ctx.fillStyle='white';
+  ctx.fillText("Leaderboard", canvas.width-150, 100);
+  state.players.sort((a, b) => b.point - a.point);
+  for (let i = 0; i < 5; ++i) {
+    ctx.font = "30px Arial Bold";
+    ctx.textAlign = "start";
+    ctx.fillStyle = colors[i];
+    ctx.fillText('#'+(i+1), canvas.width-300, 100+40*(i+1));
+    ctx.fillText(state.players[i].name, canvas.width-250, 100+40*(i+1));
+    ctx.fillText(state.players[i].point, canvas.width-100, 100+40*(i+1));
+  }
+  ctx.fillStyle='black';
 }
 
 async function paintPlayer(player, thisPlayer) {
@@ -301,4 +321,3 @@ function updateOtherBG(main_bg) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   paintBackGround();
 }
-

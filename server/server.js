@@ -24,13 +24,14 @@ io.on("connection", (client) => {
     const pos = getUpdatedVelocity(thisPlayer, clientX, clientY);
     thisPlayer.angle = pos.angle;
   }
-  function handleNewgame() {
+  function handleNewgame(name) {
+    name = name.trim()==''?'Unknown Warrior'+count:name;
     if (!state) {
-      state = initGame();
+      state = initGame(name);
     } else {
       let isRemove = removeBot(state);
       if(!isRemove) {client.emit('fullOfRoom'); return;}
-      state.players.push(createNewPlayer(true));
+      state.players.push(createNewPlayer(true,name));
     }
     client.number = count;
     count++;
