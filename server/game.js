@@ -76,8 +76,8 @@ function getUpdatePlayer(thisPlayer) {
   } else {
     // update character movement
     let pos = getUpdatedVelocity(thisPlayer);
-    thisPlayer.x += thisPlayer.isPlayer ? pos.x : pos.x / 1.2;
-    thisPlayer.y += thisPlayer.isPlayer ? pos.y : pos.y / 1.2;
+    thisPlayer.x += pos.x;
+    thisPlayer.y += pos.y;
     thisPlayer.angle = pos.angle;
     thisPlayer.weapon = getUpdateWeapon(
       { ...thisPlayer },
