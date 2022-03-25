@@ -70,7 +70,7 @@ function getUpdatePlayer(thisPlayer) {
       move_angle = thisPlayer.weapon.angle + ATTACK_SPEED;
     } else move_angle = thisPlayer.weapon.angle - ATTACK_SPEED;
     if (move_angle < -Math.PI) {
-      move_angle *= -1;
+      move_angle += 2*Math.PI;
     }
     thisPlayer.weapon = updateWeaponByAngle(thisPlayer, move_angle);
   } else {
@@ -248,6 +248,7 @@ function getUpdateWeapon(player, char_weapon_angle) {
     }
   }
   angle = (angle * Math.PI) / 180;
+  console.log(angle);
   return {
     ...updateWeaponByAngle(player, angle),
   };
@@ -347,7 +348,6 @@ function checkBotCombat(state) {
           (thisBot.x - victim.x) ** 2 + (thisBot.y - victim.y) ** 2
         );
         if (r < (thisBot.rank.width / 2 + thisBot.rank.weapon_h) * 1.2) {
-          // đúng mẹ nó rồi
           thisBot.angle =
             victim.angle > 0 ? victim.angle - Math.PI : victim.angle + Math.PI;
           if (thisBot.recover_time <= 0) thisBot.recover_time = 500;
