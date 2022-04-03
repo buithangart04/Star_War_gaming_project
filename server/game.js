@@ -104,9 +104,6 @@ function gameLoop(state, number) {
   if (!thisPlayer) return;
   // handle attack
   let returnStatement = getUpdatePlayer(thisPlayer);
-  //update bot
-  getUpdateBotsDirection(state);
-  checkBotCombat(state);
   //eatFood
   eatFood(state);
   return returnStatement;
@@ -207,7 +204,7 @@ function checkCharacterDeath(state, io) {
         victims.push(victim.id);
         thisPlayer.point += getPointByKillCharacter(victim.rank.level);
         if (victim.isPlayer) {
-          io.emit(
+          io.sockets.emit(
             "gameover",
             JSON.stringify({ number: victim.id, isWinner: false })
           );
@@ -248,7 +245,7 @@ function getUpdateWeapon(player, char_weapon_angle) {
     }
   }
   angle = (angle * Math.PI) / 180;
-  console.log(angle);
+  if(angle>Math.PI|| angle< -Math.PI) console.log('getUpdateWeapon'+angle);
   return {
     ...updateWeaponByAngle(player, angle),
   };
@@ -321,6 +318,7 @@ function removeBot(state) {
   return isRemove;
 }
 function getUpdateBotsDirection(state) {
+  if(!state) return;
   for (let i = 0; i < state.players.length; ++i) {
     if (!state.players[i].isPlayer) {
       getUpdatePlayer(state.players[i]);
@@ -338,6 +336,7 @@ function getUpdateBotsDirection(state) {
   }
 }
 function checkBotCombat(state) {
+  if(!state) return;
   for (let i = 0; i < state.players.length; ++i) {
     if (!state.players[i].isPlayer) {
       let thisBot = state.players[i];
@@ -365,4 +364,6 @@ module.exports = {
   createNewPlayer,
   checkCharacterDeath,
   removeBot,
+  getUpdateBotsDirection,
+  checkBotCombat
 };

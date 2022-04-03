@@ -61,7 +61,6 @@ function handleGameState(state) {
     return;
   }
   state = JSON.parse(state);
-  console.log(playerNumber);
   requestAnimationFrame(() => paintgame(state));
 }
 function handleGameOver(_gameover_state) {
@@ -183,7 +182,7 @@ function paintRestrictBg(thisPlayer) {
   // draw in the right of screen
   if (
     thisPlayer.x >
-    ROOM_WIDTH - SCREEN_WIDTH / 2 + thisPlayer.rank.width / 2
+    (ROOM_WIDTH - SCREEN_WIDTH / 2 + thisPlayer.rank.width / 2)
   ) {
     let x =
       SCREEN_WIDTH -
@@ -293,15 +292,16 @@ function updateBackground(currPlayer) {
   }
 }
 function foundMainBg() {
-  background.forEach((e) => {
-    if (e.x >= 0 && e.x <= SCREEN_WIDTH && e.y >= 0 && e.y <= SCREEN_HEIGHT) {
-      main_idx = e.index;
-      return e;
+  for(let i=0;i<background.length;i++){
+    if (background[i].x >= 0 && background[i].x <= SCREEN_WIDTH && background[i].y >= 0 && background[i].y <= SCREEN_HEIGHT) {
+      main_idx = background[i].index;
+      return background[i];
     }
-  });
+  }
 }
 
 function updateOtherBG(main_bg) {
+  if(!main_bg) return;
   const renderBg = background.filter((e) => e.index !== main_bg.index);
   background[renderBg[0].index] = {
     ...background[renderBg[0].index],

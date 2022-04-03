@@ -5,7 +5,8 @@ function drawImage(ctx, img_id, pos) {
 }
 async function drawImageRotate(ctx, info) {
   //draw rotate image
-  let angle = parseInt(-((info.angle * 180) / Math.PI) / 10);
+  let angle = - parseInt(info.angle * 180 / Math.PI / 10);
+  if(angle== -18 ) angle= 18;
   let img_char = await loadImageByAngle(info.prefix.character, angle);
   ctx.drawImage(
     img_char,
@@ -14,21 +15,11 @@ async function drawImageRotate(ctx, info) {
     info.width,
     info.height
   );
-
-
-  let weapon_angle = parseInt(-((info.weapon.angle * 180) / Math.PI) / 10); 
-
+    //draw weapon
+  let weapon_angle = -parseInt(info.weapon.angle * 180/Math.PI /10); 
   let x_render = info.weapon.x_0 <  info.weapon.x_1? info.weapon.x_0 : info.weapon.x_1  
   , y_render = info.weapon.y_0 <  info.weapon.y_1? info.weapon.y_0 : info.weapon.y_1;
-
-    // ctx.fillRect( info.weapon.x_0 -10 , info.weapon.y_0-10,20,20,'red');
-    // ctx.fillRect( info.weapon.x_1 -10 , info.weapon.y_1-10,20,20,'red');
-    // ctx.fillRect( info.x -10 , info.y-10,20,20,'red');
-    // ctx.fillRect( info.x - info.width/2 -5 , info.y-5,10,10,'red');
-    // ctx.fillRect( info.x + info.width/2 - 5 , info.y-5,10,10,'red');
-    // ctx.fillRect( info.x-5  , info.y - info.height/2 -5,10,10,'red');
-    // ctx.fillRect( info.x-5  , info.y + info.height/2 -5,10,10,'red');
-
+  
     // sau đoạn vừa rồi là có tâm trục quay
   let img_weapon = await loadImageByAngle(info.prefix.weapon, weapon_angle);
   ctx.drawImage(
@@ -38,6 +29,13 @@ async function drawImageRotate(ctx, info) {
     Math.abs(info.weapon.x_0 - info.weapon.x_1)>30? Math.abs(info.weapon.x_0 - info.weapon.x_1): info.weapon.width,
     Math.abs(info.weapon.y_0 - info.weapon.y_1)>30? Math.abs(info.weapon.y_0 - info.weapon.y_1): info.weapon.width
   );
+      // ctx.fillRect( info.weapon.x_0 -10 , info.weapon.y_0-10,20,20,'red');
+    // ctx.fillRect( info.weapon.x_1 -10 , info.weapon.y_1-10,20,20,'red');
+    // ctx.fillRect( info.x -10 , info.y-10,20,20,'red');
+    // ctx.fillRect( info.x - info.width/2 -5 , info.y-5,10,10,'red');
+    // ctx.fillRect( info.x + info.width/2 - 5 , info.y-5,10,10,'red');
+    // ctx.fillRect( info.x-5  , info.y - info.height/2 -5,10,10,'red');
+    // ctx.fillRect( info.x-5  , info.y + info.height/2 -5,10,10,'red');
 }
 function getPrefixByLevel(lv) {
   switch (lv) {

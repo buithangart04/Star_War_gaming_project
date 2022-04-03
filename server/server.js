@@ -5,7 +5,9 @@ const {
   getUpdatedVelocity,
   createNewPlayer,
   checkCharacterDeath,
-  removeBot
+  removeBot,
+  getUpdateBotsDirection,
+  checkBotCombat
 } = require("./game");
 const { getCurrentPlayer } = require("./utils");
 const { FRAME_RATE } = require("./constant");
@@ -43,14 +45,16 @@ io.on("connection", (client) => {
     const intervalId = setInterval(() => {
       const winner = gameLoop(state, client.number);
       if (!winner) {
+          getUpdateBotsDirection(state);
+          checkBotCombat(state);
           checkCharacterDeath(state, io);
           emitGameState(state);
       } else {
-        io.emit(
+        io.sockets.emit(
           "gameover",
           JSON.stringify({ number: winner, isWinner: true })
         );
-        //clearInterval(intervalId);
+        clearInterval(intervalId);
       }
     }, 1000 / FRAME_RATE);
   }
