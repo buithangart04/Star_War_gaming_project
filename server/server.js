@@ -71,8 +71,8 @@ io.on("connection", (client) => {
           if(firstKey == client.id) {
             getUpdateBotsDirection(state);
             checkBotCombat(state);
+            checkCharacterDeath(state, io);
           }
-          checkCharacterDeath(state, io);
           emitGameState(state); 
       } else {
         io.sockets.emit(
