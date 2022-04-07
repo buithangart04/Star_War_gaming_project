@@ -22,11 +22,21 @@ io.on("connection", (client) => {
     clearInterval(threadMap.get(client.id));
     threadMap.delete(client.id);
     if(!state) return;
+    let hasPlayer = false;
     for(let i=0;i< state.players.length;++i){
-     if(state.players[i].isPlayer) return; 
+      if(state.players[i].id == client.number) {
+        state.players.splice(i, 1);
+        i--;
+        continue;
+      }else if(state.players[i].isPlayer) hasPlayer= true;
     }
-    state = undefined;
-    count=0;
+    if(!hasPlayer){
+      for (let threadId of threadMap.values()){
+        clearInterval(threadId);
+      }
+      state = undefined;
+      count=0;
+    }
   });
 
   function handleMouseMove(clientX, clientY) {
