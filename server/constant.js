@@ -9,7 +9,7 @@ const RANK = [
   {
     level: 0,
     vel: 5,
-    exp: 10,
+    exp: 25,
     width: 150,
     height: 150,
     weapon_w: 30,
@@ -18,7 +18,7 @@ const RANK = [
   {
     level: 1,
     vel: 4,
-    exp: 30,
+    exp: 50,
     width: 250,
     height: 250,
     weapon_w: 50,
@@ -27,7 +27,7 @@ const RANK = [
   {
     level: 2,
     vel: 3,
-    exp: 70,
+    exp: 100,
     width: 400,
     height: 400,
     weapon_w: 80,

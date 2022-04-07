@@ -15,8 +15,10 @@ async function drawImageRotate(ctx, info) {
     info.width,
     info.height
   );
+  if(info.weapon.angle> Math.PI||info.weapon.angle< -Math.PI)console.log(info.weapon.angle);
     //draw weapon
   let weapon_angle = -parseInt(info.weapon.angle * 180/Math.PI /10); 
+  if(weapon_angle==-18) weapon_angle=18;
   let x_render = info.weapon.x_0 <  info.weapon.x_1? info.weapon.x_0 : info.weapon.x_1  
   , y_render = info.weapon.y_0 <  info.weapon.y_1? info.weapon.y_0 : info.weapon.y_1;
   
@@ -66,6 +68,6 @@ function getCurrentPlayer(state,number){
   for(let i=0;i< state.players.length;++i){
       if(state.players[i].id == number) return state.players[i];
   }
-    return false;
+  return false;
 }
 

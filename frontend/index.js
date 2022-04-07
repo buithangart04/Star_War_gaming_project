@@ -1,4 +1,4 @@
-const socket = io("http://localhost:3000", { transports: ["websocket"] });
+const socket = io("https://mysterious-brook-80094.herokuapp.com/", { transports: ["websocket"] });
 
 let canvas, ctx;
 let oldPlayerState = {};
@@ -57,10 +57,10 @@ function handleInit(_playerNumber) {
 }
 
 function handleGameState(state) {
-  if (!gameActive) {
+  state = JSON.parse(state);
+  if (!gameActive || !state) {
     return;
   }
-  state = JSON.parse(state);
   requestAnimationFrame(() => paintgame(state));
 }
 function handleGameOver(_gameover_state) {
@@ -77,6 +77,10 @@ function handleGameOver(_gameover_state) {
 /*--------------------------paint--------------------------------------- */
 function paintgame(state) {
   let thisPlayer = getCurrentPlayer(state, playerNumber);
+  if(!thisPlayer){
+    console.log('player not found error!');
+    return;
+  }
   updateBackground(thisPlayer);
   displayTopPlayers(state);
   //paint restrict bg
@@ -85,7 +89,6 @@ function paintgame(state) {
   paintFood(state.food, thisPlayer);
   oldPlayerState = { ...thisPlayer };
   state.players.forEach((player) => paintPlayer(player, thisPlayer));
- 
 }
 
 function displayTopPlayers(state) {
@@ -275,33 +278,24 @@ function updateBackground(currPlayer) {
       };
     }
 
-    if (background[getOtherBG[1].index].x < 0) {
       background[getOtherBG[2].index] = {
         ...background[getOtherBG[2].index],
-        x: background[getOtherBG[1].index].x + SCREEN_WIDTH,
+        x: background[getOtherBG[0].index].x,
         y: background[getOtherBG[1].index].y,
       };
-    } else {
-      background[getOtherBG[2].index] = {
-        ...background[getOtherBG[2].index],
-        x: background[getOtherBG[1].index].x - SCREEN_WIDTH,
-        y: background[getOtherBG[1].index].y,
-      };
-    }
     updateOtherBG(foundMainBg());
   }
 }
 function foundMainBg() {
   for(let i=0;i<background.length;i++){
     if (background[i].x >= 0 && background[i].x <= SCREEN_WIDTH && background[i].y >= 0 && background[i].y <= SCREEN_HEIGHT) {
-      main_idx = background[i].index;
+      main_idx = i;
       return background[i];
     }
   }
 }
 
 function updateOtherBG(main_bg) {
-  if(!main_bg) return;
   const renderBg = background.filter((e) => e.index !== main_bg.index);
   background[renderBg[0].index] = {
     ...background[renderBg[0].index],

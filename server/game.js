@@ -12,6 +12,7 @@ const { getCurrentPlayer, checkValueInArray } = require("./utils");
 let botId = 100000;
 function initGame(name) {
   const state = createGameState(name);
+  botId = 100000;
   //create bot
   createListBot(state);
   return state;
@@ -40,7 +41,7 @@ function createNewPlayer(isPlayer, name) {
       y_0: initPlayer.y,
       x_1: initPlayer.x + RANK[0].width / 2 + RANK[0].weapon_w,
       y_1: initPlayer.y + RANK[0].weapon_h,
-      angle: CHARACTER_WEAPON_ANGLE,
+      angle: CHARACTER_WEAPON_ANGLE*Math.PI/180,
     },
     recover_time: 0,
     bot_change_direction_time: 800,
@@ -70,8 +71,8 @@ function getUpdatePlayer(thisPlayer) {
       move_angle = thisPlayer.weapon.angle + ATTACK_SPEED;
     } else move_angle = thisPlayer.weapon.angle - ATTACK_SPEED;
     if (move_angle < -Math.PI) {
-      move_angle += 2*Math.PI;
-    }
+      move_angle += 2 * Math.PI;
+    } else if (move_angle > Math.PI) move_angle -= 2 * Math.PI;
     thisPlayer.weapon = updateWeaponByAngle(thisPlayer, move_angle);
   } else {
     // update character movement
@@ -212,9 +213,12 @@ function checkCharacterDeath(state, io) {
       }
     }
   }
-  state.players = state.players.filter(
-    (e) => !checkValueInArray(victims, e.id)
-  );
+  if (victims.length !== 0) {
+    state.players = state.players.filter(
+      (e) => !checkValueInArray(victims, e.id)
+    );
+  }
+
   // after kill bot or players
   createListBot(state);
 }
@@ -245,7 +249,6 @@ function getUpdateWeapon(player, char_weapon_angle) {
     }
   }
   angle = (angle * Math.PI) / 180;
-  if(angle>Math.PI|| angle< -Math.PI) console.log('getUpdateWeapon'+angle);
   return {
     ...updateWeaponByAngle(player, angle),
   };
@@ -300,7 +303,7 @@ function getPointByKillCharacter(lv) {
 function createListBot(state) {
   if (state.players.length > 10) return;
   for (let i = 0; i < 20 - state.players.length; ++i) {
-    let bot = createNewPlayer(false, "bot" + (botId - 100000));
+    let bot = createNewPlayer(false, "Bot" + (botId - 100000));
     bot.id = botId++;
     state.players.push(bot);
   }
@@ -318,7 +321,7 @@ function removeBot(state) {
   return isRemove;
 }
 function getUpdateBotsDirection(state) {
-  if(!state) return;
+  if (!state) return;
   for (let i = 0; i < state.players.length; ++i) {
     if (!state.players[i].isPlayer) {
       getUpdatePlayer(state.players[i]);
@@ -336,7 +339,7 @@ function getUpdateBotsDirection(state) {
   }
 }
 function checkBotCombat(state) {
-  if(!state) return;
+  if (!state) return;
   for (let i = 0; i < state.players.length; ++i) {
     if (!state.players[i].isPlayer) {
       let thisBot = state.players[i];
@@ -365,5 +368,5 @@ module.exports = {
   checkCharacterDeath,
   removeBot,
   getUpdateBotsDirection,
-  checkBotCombat
+  checkBotCombat,
 };
