@@ -78,9 +78,9 @@ io.on("connection", (client) => {
       } else {
         io.sockets.emit(
           "gameover",
-          JSON.stringify({ number: winner, isWinner: true })
+          JSON.stringify({ number: client.number, isWinner: true })
         );
-        state.players= state.players.filter(e => e.id != client.number);
+        state.players = state.players.filter(e => e.id != client.number);
       }
     }, 1000 / FRAME_RATE);
     threadMap.set(client.id,threadId);

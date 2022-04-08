@@ -91,7 +91,7 @@ function getUpdatePlayer(thisPlayer) {
       thisPlayer.rank = RANK[thisPlayer.rank.level + 1];
     } else if (!thisPlayer.isPlayer) return false;
     else {
-      return thisPlayer.id;
+      return true;
     }
   }
 
