@@ -85,8 +85,8 @@ io.on("connection", (client) => {
     threadMap.set(client.id,threadId);
   }
   function emitGameState(gameState) {
-    // Send this event to everyone in the room.
-    io.sockets.emit("gameState", JSON.stringify(gameState));
+    // Send this event to the client request in the room.
+    client.emit("gameState", JSON.stringify(gameState));
   }
   function handleCombat() {
     // this will attack an angle 120 degrees
