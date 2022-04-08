@@ -19,6 +19,7 @@ io.on("connection", (client) => {
   client.on("mousemove", handleMouseMove);
   client.on("combat", handleCombat);
   client.on('disconnect', function () {
+    if(!threadMap) return;
     clearInterval(threadMap.get(client.id));
     threadMap.delete(client.id);
     if(!state) return;
