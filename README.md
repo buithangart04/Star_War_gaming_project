@@ -40,6 +40,6 @@ Then run front end folder by double click index.html file or open with Live Serv
 you can play my game in [here](https://starwarazt4.netlify.app/) (Reload page if page is lag or game over)
 
 ## Author
-@thangbuiduc
+- [@thangbuiduc](https://github.com/buithangart04)
 
 
