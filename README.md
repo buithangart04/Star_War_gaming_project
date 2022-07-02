@@ -8,6 +8,6 @@ Star War is a fun multiplayer action game. Every time you level up, your charact
 ## Build using
 - [Node Js](https://nodejs.org/en/)
 - [Socket io](https://socket.io/)
-- [Html], [Css], [Bootstrap](https://getbootstrap.com/)
+- [Html](), [Css](), [Bootstrap](https://getbootstrap.com/)
 
 
