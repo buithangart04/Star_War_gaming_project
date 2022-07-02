@@ -32,7 +32,7 @@ Run server
 $ npm start
 ```
 Before run front end you need to change url to connect local url in index.js file. Go to line 1 in index.js file and change 
-`https://mysterious-brook-80094.herokuapp.com/' to  `http://localhost:3000`
+`https://mysterious-brook-80094.herokuapp.com/` to  `http://localhost:3000`
 
 Then run front end Folder by double click index.html file or open with Live Server in VSCode
 
